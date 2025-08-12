@@ -11,9 +11,9 @@ async function testAPI() {
     console.log('✅ MongoDB connected');
     
     // Import models to test their structure
-    const User = require('./models/User');
-    const Book = require('./models/Book');
-    const Category = require('./models/Category');
+    const User = require('../models/User');
+    const Book = require('../models/Book');
+    const Category = require('../models/Category');
     
     console.log('✅ All models loaded successfully');
     
@@ -31,9 +31,9 @@ async function testAPI() {
     const app = express();
     
     // Try importing routes
-    const booksRoutes = require('./routes/books');
-    const categoriesRoutes = require('./routes/categories');
-    const usersRoutes = require('./routes/users');
+    const booksRoutes = require('../routes/books');
+    const categoriesRoutes = require('../routes/categories');
+    const usersRoutes = require('../routes/users');
     
     console.log('✅ All route modules imported successfully');
     console.log('✅ API structure is valid and ready to serve requests');

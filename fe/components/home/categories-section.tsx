@@ -54,11 +54,11 @@ export function CategoriesSection() {
           {categories.map((category) => (
             <Card key={category._id} className="group hover:shadow-lg transition-shadow duration-300 overflow-hidden">
               <CardContent className="p-0">
-                <Link href={`/shop/${category.slug}`}>
+                <Link href={category.slug}>
                   <div className="relative aspect-[4/3] bg-gradient-to-br from-primary/10 to-purple-600/10">
                     <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-black/40 z-10"></div>
                     <Image
-                      src={category.image || '/placeholder-category.jpg'}
+                      src={category.image || category.slug}
                       alt={category.name}
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-105"

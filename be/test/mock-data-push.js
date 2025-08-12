@@ -5,12 +5,12 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // Import models
-const Category = require('./models/Category');
-const Author = require('./models/Author');
-const Publisher = require('./models/Publisher');
-const Book = require('./models/Book');
-const Review = require('./models/Review');
-const User = require('./models/User');
+const Category = require('../models/Category');
+const Author = require('../models/Author');
+const Publisher = require('../models/Publisher');
+const Book = require('../models/Book');
+const Review = require('../models/Review');
+const User = require('../models/User');
 
 // Mock data
 const mockAuthors = [

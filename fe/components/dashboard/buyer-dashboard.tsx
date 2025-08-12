@@ -260,7 +260,7 @@ export function BuyerDashboard({ user }: BuyerDashboardProps) {
           <CardContent>
             <div className="text-2xl font-bold">Active</div>
             <p className="text-xs text-muted-foreground">
-              Member since {new Date(user.createdAt).getFullYear()}
+              Member since {user.createdAt ? new Date(user.createdAt).getFullYear() : '2024'}
             </p>
           </CardContent>
         </Card>
@@ -323,7 +323,11 @@ export function BuyerDashboard({ user }: BuyerDashboardProps) {
                       {order.items.length} items • ${order.totalAmount.toFixed(2)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(order.createdAt).toLocaleDateString()}
+                      {new Date(order.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
                     </p>
                   </div>
                   

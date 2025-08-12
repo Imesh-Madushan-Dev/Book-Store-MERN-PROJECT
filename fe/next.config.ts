@@ -5,9 +5,10 @@ const nextConfig: NextConfig = {
     domains: [
       "makeenbooks.com",
       "cms.sarasavi.lk",
-      "makeenbooks.s3.us-east-1.amazonaws.com",
+      "i.postimg.cc",
       "covers.openlibrary.org",
       "openlibrary.org",
+      "images.unsplash.com",
     ],
   },
 };

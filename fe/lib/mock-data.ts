@@ -3,40 +3,45 @@ import { User, Book, Category, Author, Publisher, Review, Order, OrderItem, Addr
 // Mock Authors
 export const mockAuthors: Author[] = [
   {
-    id: '1',
+    _id: '1',
     name: 'J.K. Rowling',
+    slug: 'jk-rowling',
     bio: 'British author best known for the Harry Potter fantasy series.',
     image: '/authors/jk-rowling.jpg',
     nationality: 'British',
     birthYear: 1965,
   },
   {
-    id: '2',
+    _id: '2',
     name: 'Stephen King',
+    slug: 'stephen-king',
     bio: 'American author of horror, supernatural fiction, suspense, crime, science-fiction, and fantasy novels.',
     image: '/authors/stephen-king.jpg',
     nationality: 'American',
     birthYear: 1947,
   },
   {
-    id: '3',
+    _id: '3',
     name: 'Agatha Christie',
+    slug: 'agatha-christie',
     bio: 'English writer known for her detective novels, particularly those featuring Hercule Poirot and Miss Marple.',
     image: '/authors/agatha-christie.jpg',
     nationality: 'British',
     birthYear: 1890,
   },
   {
-    id: '4',
+    _id: '4',
     name: 'George Orwell',
+    slug: 'george-orwell',
     bio: 'English novelist, critic, and journalist known for works like 1984 and Animal Farm.',
     image: '/authors/george-orwell.jpg',
     nationality: 'British',
     birthYear: 1903,
   },
   {
-    id: '5',
+    _id: '5',
     name: 'Jane Austen',
+    slug: 'jane-austen',
     bio: 'English novelist known for her social commentary and wit in novels like Pride and Prejudice.',
     image: '/authors/jane-austen.jpg',
     nationality: 'British',
@@ -47,22 +52,25 @@ export const mockAuthors: Author[] = [
 // Mock Publishers
 export const mockPublishers: Publisher[] = [
   {
-    id: '1',
+    _id: '1',
     name: 'Penguin Random House',
+    slug: 'penguin-random-house',
     description: 'Leading global trade book publisher',
     website: 'https://penguinrandomhouse.com',
     logo: '/publishers/penguin.jpg',
   },
   {
-    id: '2',
+    _id: '2',
     name: 'HarperCollins',
+    slug: 'harpercollins',
     description: 'One of the "Big Five" publishers',
     website: 'https://harpercollins.com',
     logo: '/publishers/harpercollins.jpg',
   },
   {
-    id: '3',
+    _id: '3',
     name: 'Macmillan Publishers',
+    slug: 'macmillan-publishers',
     description: 'British publishing company',
     website: 'https://macmillan.com',
     logo: '/publishers/macmillan.jpg',
@@ -72,7 +80,7 @@ export const mockPublishers: Publisher[] = [
 // Mock Categories
 export const mockCategories: Category[] = [
   {
-    id: '1',
+    _id: '1',
     name: 'Fiction',
     description: 'Literary fiction and novels',
     slug: 'fiction',
@@ -80,7 +88,7 @@ export const mockCategories: Category[] = [
     bookCount: 1250,
   },
   {
-    id: '2',
+    _id: '2',
     name: 'Mystery & Thriller',
     description: 'Suspenseful and mysterious stories',
     slug: 'mystery-thriller',
@@ -88,7 +96,7 @@ export const mockCategories: Category[] = [
     bookCount: 842,
   },
   {
-    id: '3',
+    _id: '3',
     name: 'Science Fiction & Fantasy',
     description: 'Imaginative and futuristic stories',
     slug: 'sci-fi-fantasy',
@@ -96,7 +104,7 @@ export const mockCategories: Category[] = [
     bookCount: 756,
   },
   {
-    id: '4',
+    _id: '4',
     name: 'Romance',
     description: 'Love stories and romantic fiction',
     slug: 'romance',
@@ -104,7 +112,7 @@ export const mockCategories: Category[] = [
     bookCount: 634,
   },
   {
-    id: '5',
+    _id: '5',
     name: 'Non-Fiction',
     description: 'Real-world topics and factual content',
     slug: 'non-fiction',
@@ -112,7 +120,7 @@ export const mockCategories: Category[] = [
     bookCount: 923,
   },
   {
-    id: '6',
+    _id: '6',
     name: 'History',
     description: 'Historical events and biographies',
     slug: 'history',
@@ -120,7 +128,7 @@ export const mockCategories: Category[] = [
     bookCount: 445,
   },
   {
-    id: '7',
+    _id: '7',
     name: 'Business',
     description: 'Business and entrepreneurship',
     slug: 'business',
@@ -128,7 +136,7 @@ export const mockCategories: Category[] = [
     bookCount: 312,
   },
   {
-    id: '8',
+    _id: '8',
     name: 'Self-Help',
     description: 'Personal development and motivation',
     slug: 'self-help',
@@ -140,7 +148,7 @@ export const mockCategories: Category[] = [
 // Mock Users
 export const mockUsers: User[] = [
   {
-    id: '1',
+    _id: '1',
     email: 'john.doe@example.com',
     name: 'John Doe',
     role: 'BUYER',
@@ -150,7 +158,7 @@ export const mockUsers: User[] = [
     wishlist: ['1', '3', '5'],
   },
   {
-    id: '2',
+    _id: '2',
     email: 'jane.smith@example.com',
     name: 'Jane Smith',
     role: 'SELLER',
@@ -162,7 +170,7 @@ export const mockUsers: User[] = [
     updatedAt: new Date('2024-01-10'),
   },
   {
-    id: '3',
+    _id: '3',
     email: 'admin@bookstore.com',
     name: 'Admin User',
     role: 'ADMIN',
@@ -175,7 +183,7 @@ export const mockUsers: User[] = [
 // Mock Books
 export const mockBooks: Book[] = [
   {
-    id: '1',
+    _id: '1',
     title: 'Harry Potter and the Philosopher\'s Stone',
     description: 'The first book in the Harry Potter series follows Harry Potter, a young wizard who discovers his magical heritage on his eleventh birthday.',
     isbn: '9780747532699',
@@ -208,7 +216,7 @@ export const mockBooks: Book[] = [
     updatedAt: new Date('2024-01-15'),
   },
   {
-    id: '2',
+    _id: '2',
     title: 'The Shining',
     description: 'A masterpiece of horror fiction about Jack Torrance, who becomes winter caretaker of the isolated Overlook Hotel.',
     isbn: '9780307743657',
@@ -239,7 +247,7 @@ export const mockBooks: Book[] = [
     updatedAt: new Date('2024-01-10'),
   },
   {
-    id: '3',
+    _id: '3',
     title: 'Murder on the Orient Express',
     description: 'Hercule Poirot investigates a murder aboard the famous Orient Express train.',
     isbn: '9780062693662',
@@ -270,7 +278,7 @@ export const mockBooks: Book[] = [
     updatedAt: new Date('2024-01-08'),
   },
   {
-    id: '4',
+    _id: '4',
     title: '1984',
     description: 'A dystopian novel about totalitarian control and surveillance in a future society.',
     isbn: '9780452284234',
@@ -301,7 +309,7 @@ export const mockBooks: Book[] = [
     updatedAt: new Date('2024-01-12'),
   },
   {
-    id: '5',
+    _id: '5',
     title: 'Pride and Prejudice',
     description: 'A romantic novel following Elizabeth Bennet and her complex relationship with Mr. Darcy.',
     isbn: '9780141439518',
@@ -336,7 +344,7 @@ export const mockBooks: Book[] = [
 // Mock Reviews
 export const mockReviews: Review[] = [
   {
-    id: '1',
+    _id: '1',
     bookId: '1',
     book: mockBooks[0],
     userId: '1',
@@ -351,7 +359,7 @@ export const mockReviews: Review[] = [
     updatedAt: new Date('2023-12-01'),
   },
   {
-    id: '2',
+    _id: '2',
     bookId: '1',
     userId: '3',
     user: mockUsers[2],
@@ -365,7 +373,7 @@ export const mockReviews: Review[] = [
     updatedAt: new Date('2023-11-15'),
   },
   {
-    id: '3',
+    _id: '3',
     bookId: '2',
     userId: '1',
     user: mockUsers[0],
@@ -383,7 +391,7 @@ export const mockReviews: Review[] = [
 // Mock Addresses
 export const mockAddresses: Address[] = [
   {
-    id: '1',
+    _id: '1',
     userId: '1',
     name: 'John Doe',
     street: '123 Main Street',
@@ -399,12 +407,12 @@ export const mockAddresses: Address[] = [
 // Mock Orders
 export const mockOrders: Order[] = [
   {
-    id: '1',
+    _id: '1',
     userId: '1',
     user: mockUsers[0],
     items: [
       {
-        id: '1',
+        _id: '1',
         orderId: '1',
         bookId: '1',
         book: mockBooks[0],
@@ -413,7 +421,7 @@ export const mockOrders: Order[] = [
         totalPrice: 12.99,
       },
       {
-        id: '2',
+        _id: '2',
         orderId: '1',
         bookId: '3',
         book: mockBooks[2],
@@ -465,7 +473,7 @@ export const getMockBooks = (filters?: {
 };
 
 export const getMockBookById = (id: string) => {
-  return mockBooks.find(book => book.id === id);
+  return mockBooks.find(book => book._id === id);
 };
 
 export const getMockReviewsByBookId = (bookId: string) => {

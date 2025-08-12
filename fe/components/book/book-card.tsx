@@ -6,7 +6,7 @@ import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Book } from '@/lib/types';
+import { Book } from '@/lib/api/books';
 
 interface BookCardProps {
   book: Book;
@@ -14,9 +14,7 @@ interface BookCardProps {
 }
 
 export function BookCard({ book, className = '' }: BookCardProps) {
-  const discountPercentage = book.originalPrice 
-    ? Math.round(((book.originalPrice - book.price) / book.originalPrice) * 100)
-    : 0;
+  const discountPercentage = book.discount || 0;
 
   return (
     <Card className={`group hover:shadow-lg transition-shadow duration-300 ${className}`}>
@@ -83,7 +81,7 @@ export function BookCard({ book, className = '' }: BookCardProps) {
                 <Star
                   key={i}
                   className={`h-3 w-3 ${
-                    i < Math.floor(book.rating || 0)
+                    i < Math.floor(book.averageRating || 0)
                       ? 'fill-yellow-400 text-yellow-400'
                       : 'text-muted-foreground'
                   }`}
@@ -91,7 +89,7 @@ export function BookCard({ book, className = '' }: BookCardProps) {
               ))}
             </div>
             <span className="text-xs text-muted-foreground">
-              {book.rating || 0} ({book.reviewCount || 0})
+              {book.averageRating || 0} ({book.totalReviews || 0})
             </span>
           </div>
 

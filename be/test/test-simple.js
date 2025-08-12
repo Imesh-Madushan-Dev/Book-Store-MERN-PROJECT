@@ -13,7 +13,7 @@ async function testBasic() {
     console.log('✅ Connected to MongoDB');
 
     // Import User model
-    const User = require('./models/User');
+    const User = require('../models/User');
     
     // Test password hashing
     console.log('\n1. Testing password hashing...');

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,106 +9,105 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { BookCard } from '@/components/book/book-card';
-import { getMockBooks, mockCategories, mockAuthors } from '@/lib/mock-data';
-import { Book, BookFilters, SortOptions } from '@/lib/types';
+import { booksAPI, type Book, type BookFilters, type Category, type Author } from '@/lib/api/books';
+import { categoriesAPI } from '@/lib/api/categories';
+import { authorsAPI } from '@/lib/api/authors';
 
 export default function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<BookFilters>({});
-  const [sortBy, setSortBy] = useState<SortOptions>({ field: 'title', order: 'asc' });
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [authorFilter, setAuthorFilter] = useState('');
+  const [sortBy, setSortBy] = useState('title');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [minPrice, setMinPrice] = useState<number | undefined>();
+  const [maxPrice, setMaxPrice] = useState<number | undefined>();
+  const [format, setFormat] = useState('');
+  const [rating, setRating] = useState<number | undefined>();
   
-  const allBooks = getMockBooks();
-  const itemsPerPage = 12;
+  // Data states
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalBooks, setTotalBooks] = useState(0);
 
-  // Filter and sort books
-  const filteredBooks = useMemo(() => {
-    let books = [...allBooks];
+  // Fetch initial data
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [categoriesData, authorsData] = await Promise.all([
+          categoriesAPI.getCategories(),
+          authorsAPI.getAuthors()
+        ]);
 
-    // Search filter
-    if (searchQuery) {
-      books = books.filter(book =>
-        book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.author?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Category filter
-    if (filters.category) {
-      books = books.filter(book => book.category?.slug === filters.category);
-    }
-
-    // Author filter
-    if (filters.author) {
-      books = books.filter(book => book.authorId === filters.author);
-    }
-
-    // Price filters
-    if (filters.minPrice !== undefined) {
-      books = books.filter(book => book.price >= filters.minPrice!);
-    }
-    if (filters.maxPrice !== undefined) {
-      books = books.filter(book => book.price <= filters.maxPrice!);
-    }
-
-    // Format filter
-    if (filters.format) {
-      books = books.filter(book => book.format === filters.format);
-    }
-
-    // Rating filter
-    if (filters.rating) {
-      books = books.filter(book => book.rating! >= filters.rating!);
-    }
-
-    // In stock filter
-    if (filters.inStock) {
-      books = books.filter(book => book.stock > 0);
-    }
-
-    // Sort books
-    books.sort((a, b) => {
-      const aValue = a[sortBy.field];
-      const bValue = b[sortBy.field];
-      
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortBy.order === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+        setCategories(categoriesData.categories || []);
+        setAuthors(authorsData.authors || []);
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
       }
-      
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return sortBy.order === 'asc' 
-          ? aValue - bValue
-          : bValue - aValue;
+    };
+
+    fetchInitialData();
+  }, []);
+
+  // Fetch books when filters change
+  useEffect(() => {
+    const fetchBooks = async () => {
+      setLoading(true);
+      try {
+        const filters: BookFilters = {
+          page: currentPage,
+          limit: 12,
+          sort: sortBy,
+          order: sortOrder,
+        };
+
+        if (searchQuery.trim()) filters.search = searchQuery.trim();
+        if (categoryFilter) filters.category = categoryFilter;
+        if (authorFilter) filters.author = authorFilter;
+        if (minPrice !== undefined) filters.minPrice = minPrice;
+        if (maxPrice !== undefined) filters.maxPrice = maxPrice;
+        if (format) filters.format = format;
+        if (rating !== undefined) filters.rating = rating;
+
+        const response = await booksAPI.getBooks(filters);
+        
+        setBooks(response.books || []);
+        setTotalPages(response.pagination?.totalPages || 1);
+        setTotalBooks(response.pagination?.totalBooks || 0);
+      } catch (error) {
+        console.error('Error fetching books:', error);
+        setBooks([]);
+      } finally {
+        setLoading(false);
       }
-      
-      return 0;
-    });
+    };
 
-    return books;
-  }, [allBooks, searchQuery, filters, sortBy]);
-
-  // Paginate books
-  const paginatedBooks = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredBooks.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredBooks, currentPage]);
-
-  const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+    fetchBooks();
+  }, [searchQuery, categoryFilter, authorFilter, sortBy, sortOrder, currentPage, minPrice, maxPrice, format, rating]);
 
   const clearFilters = () => {
-    setFilters({});
     setSearchQuery('');
+    setCategoryFilter('');
+    setAuthorFilter('');
+    setMinPrice(undefined);
+    setMaxPrice(undefined);
+    setFormat('');
+    setRating(undefined);
     setCurrentPage(1);
   };
 
-  const activeFiltersCount = Object.keys(filters).filter(key => 
-    filters[key as keyof BookFilters] !== undefined && 
-    filters[key as keyof BookFilters] !== ''
-  ).length;
+  const activeFiltersCount = [
+    categoryFilter,
+    authorFilter,
+    minPrice,
+    maxPrice,
+    format,
+    rating
+  ].filter(filter => filter !== undefined && filter !== '').length;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -126,8 +125,20 @@ export default function ShopPage() {
             </div>
 
             <FilterSection 
-              filters={filters} 
-              setFilters={setFilters}
+              categories={categories}
+              authors={authors}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              authorFilter={authorFilter}
+              setAuthorFilter={setAuthorFilter}
+              minPrice={minPrice}
+              setMinPrice={setMinPrice}
+              maxPrice={maxPrice}
+              setMaxPrice={setMaxPrice}
+              format={format}
+              setFormat={setFormat}
+              rating={rating}
+              setRating={setRating}
               setCurrentPage={setCurrentPage}
             />
           </div>
@@ -140,7 +151,7 @@ export default function ShopPage() {
             <div>
               <h1 className="text-3xl font-bold">All Books</h1>
               <p className="text-muted-foreground mt-1">
-                {filteredBooks.length} books found
+                {loading ? 'Loading...' : `${totalBooks} books found`}
               </p>
             </div>
 
@@ -178,8 +189,20 @@ export default function ShopPage() {
                   </SheetHeader>
                   <div className="mt-6">
                     <FilterSection 
-                      filters={filters} 
-                      setFilters={setFilters}
+                      categories={categories}
+                      authors={authors}
+                      categoryFilter={categoryFilter}
+                      setCategoryFilter={setCategoryFilter}
+                      authorFilter={authorFilter}
+                      setAuthorFilter={setAuthorFilter}
+                      minPrice={minPrice}
+                      setMinPrice={setMinPrice}
+                      maxPrice={maxPrice}
+                      setMaxPrice={setMaxPrice}
+                      format={format}
+                      setFormat={setFormat}
+                      rating={rating}
+                      setRating={setRating}
                       setCurrentPage={setCurrentPage}
                     />
                   </div>
@@ -188,10 +211,11 @@ export default function ShopPage() {
 
               {/* Sort */}
               <Select 
-                value={`${sortBy.field}-${sortBy.order}`} 
+                value={`${sortBy}-${sortOrder}`} 
                 onValueChange={(value) => {
                   const [field, order] = value.split('-');
-                  setSortBy({ field: field as any, order: order as 'asc' | 'desc' });
+                  setSortBy(field);
+                  setSortOrder(order as 'asc' | 'desc');
                 }}
               >
                 <SelectTrigger className="w-[180px]">
@@ -202,9 +226,9 @@ export default function ShopPage() {
                   <SelectItem value="title-desc">Title Z-A</SelectItem>
                   <SelectItem value="price-asc">Price Low to High</SelectItem>
                   <SelectItem value="price-desc">Price High to Low</SelectItem>
-                  <SelectItem value="rating-desc">Highest Rated</SelectItem>
                   <SelectItem value="publishedYear-desc">Newest First</SelectItem>
                   <SelectItem value="publishedYear-asc">Oldest First</SelectItem>
+                  <SelectItem value="salesCount-desc">Most Popular</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -213,45 +237,117 @@ export default function ShopPage() {
           {/* Active Filters */}
           {activeFiltersCount > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
-              {Object.entries(filters).map(([key, value]) => {
-                if (!value) return null;
-                
-                let displayValue = value;
-                if (key === 'category') {
-                  const category = mockCategories.find(c => c.slug === value);
-                  displayValue = category?.name || value;
-                } else if (key === 'author') {
-                  const author = mockAuthors.find(a => a._id === value);
-                  displayValue = author?.name || value;
-                }
+              {categoryFilter && (
+                <Badge variant="secondary" className="cursor-pointer">
+                  Category: {categories.find(c => c._id === categoryFilter)?.name || categoryFilter}
+                  <button
+                    className="ml-2 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                    onClick={() => {
+                      setCategoryFilter('');
+                      setCurrentPage(1);
+                    }}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              
+              {authorFilter && (
+                <Badge variant="secondary" className="cursor-pointer">
+                  Author: {authors.find(a => a._id === authorFilter)?.name || authorFilter}
+                  <button
+                    className="ml-2 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                    onClick={() => {
+                      setAuthorFilter('');
+                      setCurrentPage(1);
+                    }}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
 
-                return (
-                  <Badge key={key} variant="secondary" className="cursor-pointer">
-                    {key}: {displayValue.toString()}
-                    <button
-                      className="ml-2 hover:bg-muted-foreground/20 rounded-full p-0.5"
-                      onClick={() => {
-                        setFilters(prev => ({ ...prev, [key]: undefined }));
-                        setCurrentPage(1);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                );
-              })}
+              {(minPrice !== undefined || maxPrice !== undefined) && (
+                <Badge variant="secondary" className="cursor-pointer">
+                  Price: ${minPrice || 0} - ${maxPrice || '∞'}
+                  <button
+                    className="ml-2 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                    onClick={() => {
+                      setMinPrice(undefined);
+                      setMaxPrice(undefined);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+
+              {format && (
+                <Badge variant="secondary" className="cursor-pointer">
+                  Format: {format}
+                  <button
+                    className="ml-2 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                    onClick={() => {
+                      setFormat('');
+                      setCurrentPage(1);
+                    }}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+
+              {rating !== undefined && (
+                <Badge variant="secondary" className="cursor-pointer">
+                  Rating: {rating}+ Stars
+                  <button
+                    className="ml-2 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                    onClick={() => {
+                      setRating(undefined);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
             </div>
           )}
 
           {/* Books Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-            {paginatedBooks.map((book) => (
-              <BookCard key={book._id} book={book} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-[3/4] bg-muted rounded-lg mb-4"></div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                    <div className="h-4 bg-muted rounded w-1/4"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : books.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📚</div>
+              <h3 className="text-xl font-semibold mb-2">No books found</h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your search terms or filters
+              </p>
+              <Button onClick={clearFilters}>Clear all filters</Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+              {books.map((book) => (
+                <BookCard key={book._id} book={book} />
+              ))}
+            </div>
+          )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {totalPages > 1 && !loading && (
             <div className="flex justify-center items-center space-x-2">
               <Button
                 variant="outline"
@@ -298,14 +394,42 @@ export default function ShopPage() {
 }
 
 interface FilterSectionProps {
-  filters: BookFilters;
-  setFilters: (filters: BookFilters | ((prev: BookFilters) => BookFilters)) => void;
+  categories: Category[];
+  authors: Author[];
+  categoryFilter: string;
+  setCategoryFilter: (value: string) => void;
+  authorFilter: string;
+  setAuthorFilter: (value: string) => void;
+  minPrice: number | undefined;
+  setMinPrice: (value: number | undefined) => void;
+  maxPrice: number | undefined;
+  setMaxPrice: (value: number | undefined) => void;
+  format: string;
+  setFormat: (value: string) => void;
+  rating: number | undefined;
+  setRating: (value: number | undefined) => void;
   setCurrentPage: (page: number) => void;
 }
 
-function FilterSection({ filters, setFilters, setCurrentPage }: FilterSectionProps) {
-  const updateFilter = (key: keyof BookFilters, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+function FilterSection({
+  categories,
+  authors,
+  categoryFilter,
+  setCategoryFilter,
+  authorFilter,
+  setAuthorFilter,
+  minPrice,
+  setMinPrice,
+  maxPrice,
+  setMaxPrice,
+  format,
+  setFormat,
+  rating,
+  setRating,
+  setCurrentPage
+}: FilterSectionProps) {
+  const updateFilter = (callback: () => void) => {
+    callback();
     setCurrentPage(1);
   };
 
@@ -315,16 +439,16 @@ function FilterSection({ filters, setFilters, setCurrentPage }: FilterSectionPro
       <div>
         <Label className="text-sm font-medium">Category</Label>
         <Select 
-          value={filters.category || ""} 
-          onValueChange={(value) => updateFilter('category', value || undefined)}
+          value={categoryFilter} 
+          onValueChange={(value) => updateFilter(() => setCategoryFilter(value))}
         >
           <SelectTrigger className="w-full mt-2">
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">All Categories</SelectItem>
-            {mockCategories.map((category) => (
-              <SelectItem key={category._id} value={category.slug}>
+            {categories.map((category) => (
+              <SelectItem key={category._id} value={category._id}>
                 {category.name}
               </SelectItem>
             ))}
@@ -336,15 +460,15 @@ function FilterSection({ filters, setFilters, setCurrentPage }: FilterSectionPro
       <div>
         <Label className="text-sm font-medium">Author</Label>
         <Select 
-          value={filters.author || ""} 
-          onValueChange={(value) => updateFilter('author', value || undefined)}
+          value={authorFilter} 
+          onValueChange={(value) => updateFilter(() => setAuthorFilter(value))}
         >
           <SelectTrigger className="w-full mt-2">
             <SelectValue placeholder="All Authors" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">All Authors</SelectItem>
-            {mockAuthors.map((author) => (
+            {authors.map((author) => (
               <SelectItem key={author._id} value={author._id}>
                 {author.name}
               </SelectItem>
@@ -361,16 +485,20 @@ function FilterSection({ filters, setFilters, setCurrentPage }: FilterSectionPro
             <Input
               type="number"
               placeholder="Min"
-              value={filters.minPrice || ''}
-              onChange={(e) => updateFilter('minPrice', e.target.value ? Number(e.target.value) : undefined)}
+              value={minPrice || ''}
+              onChange={(e) => updateFilter(() => 
+                setMinPrice(e.target.value ? Number(e.target.value) : undefined)
+              )}
             />
           </div>
           <div>
             <Input
               type="number"
               placeholder="Max"
-              value={filters.maxPrice || ''}
-              onChange={(e) => updateFilter('maxPrice', e.target.value ? Number(e.target.value) : undefined)}
+              value={maxPrice || ''}
+              onChange={(e) => updateFilter(() => 
+                setMaxPrice(e.target.value ? Number(e.target.value) : undefined)
+              )}
             />
           </div>
         </div>
@@ -380,8 +508,8 @@ function FilterSection({ filters, setFilters, setCurrentPage }: FilterSectionPro
       <div>
         <Label className="text-sm font-medium">Format</Label>
         <Select 
-          value={filters.format || ""} 
-          onValueChange={(value) => updateFilter('format', value || undefined)}
+          value={format} 
+          onValueChange={(value) => updateFilter(() => setFormat(value))}
         >
           <SelectTrigger className="w-full mt-2">
             <SelectValue placeholder="All Formats" />
@@ -400,8 +528,10 @@ function FilterSection({ filters, setFilters, setCurrentPage }: FilterSectionPro
       <div>
         <Label className="text-sm font-medium">Minimum Rating</Label>
         <Select 
-          value={filters.rating?.toString() || ""} 
-          onValueChange={(value) => updateFilter('rating', value ? Number(value) : undefined)}
+          value={rating?.toString() || ''} 
+          onValueChange={(value) => updateFilter(() => 
+            setRating(value ? Number(value) : undefined)
+          )}
         >
           <SelectTrigger className="w-full mt-2">
             <SelectValue placeholder="Any Rating" />
