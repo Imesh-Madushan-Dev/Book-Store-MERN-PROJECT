@@ -46,7 +46,7 @@ export function FeaturedBooks() {
 
   return (
     <section className="py-12 md:py-16">
-      <div className="container mx-auto px-4 max-w-7xl">
+      <div className="container mx-auto px-4 ">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold">Featured Books</h2>
