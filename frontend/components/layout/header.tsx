@@ -104,9 +104,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 max-w-7xl flex h-16 items-center">
-        {/* Mobile menu */}
-        <Sheet>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl h-16 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          {/* Mobile menu */}
+          <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden mr-2">
               <Menu className="h-5 w-5" />
@@ -158,14 +159,16 @@ export function Header() {
           </SheetContent>
         </Sheet>
 
-        {/* Logo */}
-        <Link href="/" className="flex items-center space-x-2 mr-6">
-          <Book className="h-8 w-8 text-primary" />
-          <span className="hidden sm:block font-bold text-xl">BookStore</span>
-        </Link>
+          {/* Logo */}
+          <Link href="/" className="flex items-center space-x-2">
+            <Book className="h-7 w-7 text-primary" />
+            <span className="hidden sm:block font-bold text-xl bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">BookStore</span>
+          </Link>
+        </div>
 
-        {/* Desktop Navigation */}
-        <NavigationMenu className="hidden md:flex">
+        <div className="hidden md:flex items-center flex-1 px-6">
+          {/* Desktop Navigation */}
+          <NavigationMenu className="w-full">
           <NavigationMenuList>
             <NavigationMenuItem>
               <NavigationMenuTrigger>Browse</NavigationMenuTrigger>
@@ -205,10 +208,11 @@ export function Header() {
               </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
-        </NavigationMenu>
+          </NavigationMenu>
+        </div>
 
         {/* Search Bar */}
-        <div className="flex-1 max-w-md mx-4">
+        <div className="hidden md:flex flex-1 max-w-xl px-4">
           <form onSubmit={handleSearch}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -224,10 +228,10 @@ export function Header() {
         </div>
 
         {/* Right side actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1 sm:space-x-2">
           {/* Cart */}
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/cart">
+          <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
+            <Link href="/cart" className="flex items-center justify-center">
               <div className="relative">
                 <ShoppingCart className="h-5 w-5" />
                 {cartItemCount > 0 && (
@@ -244,7 +248,7 @@ export function Header() {
 
           {/* Wishlist - only for authenticated users */}
           {isAuthenticated && (
-            <Button variant="ghost" size="icon" asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9" asChild>
               <Link href="/dashboard/wishlist">
                 <Heart className="h-5 w-5" />
               </Link>
@@ -255,8 +259,8 @@ export function Header() {
           {isAuthenticated && user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                  <Avatar className="h-7 w-7">
                     <AvatarImage src={user.avatar} alt={user.name} />
                     <AvatarFallback>
                       {user.name?.split(' ').map(n => n[0]).join('') || 'U'}
@@ -323,11 +327,11 @@ export function Header() {
           ) : (
             /* Sign in/up buttons for non-authenticated users */
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Sign in</Link>
+              <Button variant="ghost" size="sm" className="h-9" asChild>
+                <Link href="/login" className="px-3">Sign in</Link>
               </Button>
-              <Button size="sm" asChild>
-                <Link href="/register">Sign up</Link>
+              <Button size="sm" className="h-9" asChild>
+                <Link href="/register" className="px-4">Sign up</Link>
               </Button>
             </div>
           )}
