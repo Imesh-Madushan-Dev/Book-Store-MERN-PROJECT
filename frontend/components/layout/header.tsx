@@ -122,10 +122,13 @@ export function Header() {
                 <Link href="/shop" className="text-sm font-medium hover:text-primary">
                   All Books
                 </Link>
-                {!loading && categories.slice(0, 6).map((category) => (
+                <Link href="/categories" className="text-sm font-medium hover:text-primary">
+                  Categories
+                </Link>
+                {!loading && categories.slice(0, 5).map((category) => (
                   <Link
                     key={category._id}
-                    href={`/shop/${category.slug}`}
+                    href={`/categories/${category.slug}`}
                     className="text-sm hover:text-primary"
                   >
                     {category.name}
@@ -178,9 +181,18 @@ export function Header() {
                       </Link>
                     </NavigationMenuLink>
                     
-                    {!loading && categories.slice(0, 5).map((category) => (
+                    <NavigationMenuLink asChild>
+                      <Link href="/categories" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                        <div className="text-sm font-medium leading-none">Categories</div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Browse by categories
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                    
+                    {!loading && categories.slice(0, 4).map((category) => (
                       <NavigationMenuLink key={category._id} asChild>
-                        <Link href={`/shop/${category.slug}`} className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
+                        <Link href={`/categories/${category.slug}`} className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
                           <div className="text-sm font-medium leading-none">{category.name}</div>
                           <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                             {category.description || `Browse ${category.name.toLowerCase()}`}

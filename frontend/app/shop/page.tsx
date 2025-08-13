@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { categoriesAPI } from '@/lib/api/categories';
 import { authorsAPI } from '@/lib/api/authors';
 
 export default function ShopPage() {
+  const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [authorFilter, setAuthorFilter] = useState('');
@@ -25,6 +27,7 @@ export default function ShopPage() {
   const [maxPrice, setMaxPrice] = useState<number | undefined>();
   const [format, setFormat] = useState('');
   const [rating, setRating] = useState<number | undefined>();
+  const [featured, setFeatured] = useState(false);
   
   // Data states
   const [loading, setLoading] = useState(true);
@@ -33,6 +36,16 @@ export default function ShopPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalBooks, setTotalBooks] = useState(0);
+
+  // Initialize from URL params
+  useEffect(() => {
+    if (searchParams.get('featured') === 'true') {
+      setFeatured(true);
+    }
+    if (searchParams.get('category')) {
+      setCategoryFilter(searchParams.get('category') || '');
+    }
+  }, [searchParams]);
 
   // Fetch initial data
   useEffect(() => {
@@ -72,6 +85,7 @@ export default function ShopPage() {
         if (maxPrice !== undefined) filters.maxPrice = maxPrice;
         if (format) filters.format = format;
         if (rating !== undefined) filters.rating = rating;
+        if (featured) filters.featured = true;
 
         const response = await booksAPI.getBooks(filters);
         
@@ -87,7 +101,7 @@ export default function ShopPage() {
     };
 
     fetchBooks();
-  }, [searchQuery, categoryFilter, authorFilter, sortBy, sortOrder, currentPage, minPrice, maxPrice, format, rating]);
+  }, [searchQuery, categoryFilter, authorFilter, sortBy, sortOrder, currentPage, minPrice, maxPrice, format, rating, featured]);
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -97,6 +111,7 @@ export default function ShopPage() {
     setMaxPrice(undefined);
     setFormat('');
     setRating(undefined);
+    setFeatured(false);
     setCurrentPage(1);
   };
 
@@ -106,7 +121,8 @@ export default function ShopPage() {
     minPrice,
     maxPrice,
     format,
-    rating
+    rating,
+    featured ? 'featured' : ''
   ].filter(filter => filter !== undefined && filter !== '').length;
 
   return (
@@ -149,7 +165,9 @@ export default function ShopPage() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-bold">All Books</h1>
+              <h1 className="text-3xl font-bold">
+                {featured ? 'Featured Books' : 'All Books'}
+              </h1>
               <p className="text-muted-foreground mt-1">
                 {loading ? 'Loading...' : `${totalBooks} books found`}
               </p>
@@ -305,6 +323,21 @@ export default function ShopPage() {
                     className="ml-2 hover:bg-muted-foreground/20 rounded-full p-0.5"
                     onClick={() => {
                       setRating(undefined);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+
+              {featured && (
+                <Badge variant="secondary" className="cursor-pointer">
+                  Featured
+                  <button
+                    className="ml-2 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                    onClick={() => {
+                      setFeatured(false);
                       setCurrentPage(1);
                     }}
                   >

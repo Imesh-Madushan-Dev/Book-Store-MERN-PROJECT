@@ -16,7 +16,7 @@ export interface Book {
   seller?: User;
   price: number;
   originalPrice?: number;
-  discount: number;
+  discount?: number;
   stock: number;
   images: string[];
   thumbnail: string;

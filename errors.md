@@ -23,7 +23,7 @@
 5. http://localhost:3000/dashboard/settings
   - This page could not be found.
 
-
+![alt text](image.png)
 # Route and the Error (Seller )
 
 1. Register as a Seller 
