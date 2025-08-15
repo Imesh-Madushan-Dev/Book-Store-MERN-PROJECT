@@ -179,7 +179,27 @@ export default function AddBookPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Upload failed:', response.status, errorData);
-        throw new Error(errorData.message || `Upload failed with status ${response.status}`);
+        
+        // Handle specific upload error cases
+        if (response.status === 401) {
+          throw new Error('You need to log in to upload images. Please refresh and try again.');
+        } else if (response.status === 403) {
+          throw new Error('You do not have permission to upload images. Only sellers can upload book images.');
+        } else if (response.status === 400) {
+          if (errorData.message && errorData.message.includes('File too large')) {
+            throw new Error('Image file is too large. Please use images under 5MB.');
+          } else if (errorData.message && errorData.message.includes('Only image files')) {
+            throw new Error('Please select only image files (JPG, PNG, GIF, WebP).');
+          } else if (errorData.message && errorData.message.includes('Too many files')) {
+            throw new Error('You can upload maximum 10 images at once.');
+          } else {
+            throw new Error(errorData.message || 'Invalid image files. Please check your selection.');
+          }
+        } else if (response.status === 500) {
+          throw new Error('Server error during upload. Please try again.');
+        } else {
+          throw new Error(errorData.message || `Image upload failed (Error ${response.status}). Please try again.`);
+        }
       }
 
       const data = await response.json();
@@ -230,20 +250,73 @@ export default function AddBookPage() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) newErrors.title = 'Title is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (!formData.isbn.trim()) newErrors.isbn = 'ISBN is required';
-    if (!formData.authorId) newErrors.authorId = 'Author is required';
-    if (!formData.publisherId) newErrors.publisherId = 'Publisher is required';
-    if (!formData.categoryId) newErrors.categoryId = 'Category is required';
-    if (formData.price <= 0) newErrors.price = 'Price must be greater than 0';
-    if (formData.stock < 0) newErrors.stock = 'Stock cannot be negative';
-    if (formData.pages <= 0) newErrors.pages = 'Pages must be greater than 0';
-    if (formData.publishedYear < 1000 || formData.publishedYear > new Date().getFullYear() + 10) {
-      newErrors.publishedYear = 'Invalid published year';
+    // Basic information validation
+    if (!formData.title.trim()) {
+      newErrors.title = 'Book title is required';
+    } else if (formData.title.trim().length < 2) {
+      newErrors.title = 'Book title must be at least 2 characters';
     }
-    if (images.length === 0) newErrors.images = 'At least one image is required';
-    if (!thumbnail) newErrors.thumbnail = 'Thumbnail is required';
+
+    if (!formData.description.trim()) {
+      newErrors.description = 'Book description is required';
+    } else if (formData.description.trim().length < 10) {
+      newErrors.description = 'Description must be at least 10 characters';
+    }
+
+    if (!formData.isbn.trim()) {
+      newErrors.isbn = 'ISBN is required';
+    } else if (!/^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$/.test(formData.isbn.trim())) {
+      newErrors.isbn = 'Please enter a valid ISBN (10 or 13 digits)';
+    }
+
+    if (!formData.authorId) {
+      newErrors.authorId = 'Please select an author';
+    }
+    if (!formData.publisherId) {
+      newErrors.publisherId = 'Please select a publisher';
+    }
+    if (!formData.categoryId) {
+      newErrors.categoryId = 'Please select a category';
+    }
+
+    // Pricing validation
+    if (formData.price <= 0) {
+      newErrors.price = 'Price must be greater than $0';
+    } else if (formData.price > 10000) {
+      newErrors.price = 'Price cannot exceed $10,000';
+    }
+
+    if (formData.originalPrice > 0 && formData.originalPrice <= formData.price) {
+      newErrors.originalPrice = 'Original price must be higher than selling price';
+    }
+
+    if (formData.stock < 0) {
+      newErrors.stock = 'Stock quantity cannot be negative';
+    } else if (formData.stock > 100000) {
+      newErrors.stock = 'Stock quantity cannot exceed 100,000';
+    }
+
+    // Book details validation
+    if (formData.pages <= 0) {
+      newErrors.pages = 'Number of pages must be greater than 0';
+    } else if (formData.pages > 10000) {
+      newErrors.pages = 'Number of pages cannot exceed 10,000';
+    }
+
+    const currentYear = new Date().getFullYear();
+    if (formData.publishedYear < 1000) {
+      newErrors.publishedYear = 'Published year cannot be before 1000';
+    } else if (formData.publishedYear > currentYear + 5) {
+      newErrors.publishedYear = `Published year cannot be after ${currentYear + 5}`;
+    }
+
+    // Image validation
+    if (images.length === 0) {
+      newErrors.images = 'Please upload at least one book image';
+    }
+    if (!thumbnail) {
+      newErrors.thumbnail = 'Please select a thumbnail image';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -277,8 +350,29 @@ export default function AddBookPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create book');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Book creation failed:', response.status, errorData);
+        
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('You need to log in to create books. Please refresh and try again.');
+        } else if (response.status === 403) {
+          throw new Error('Only sellers can create books. Please check your account role.');
+        } else if (response.status === 400) {
+          // Handle validation errors
+          if (errorData.errors && Array.isArray(errorData.errors)) {
+            const errorMessages = errorData.errors.map(err => err.msg || err.message).join(', ');
+            throw new Error(`Validation errors: ${errorMessages}`);
+          } else if (errorData.message) {
+            throw new Error(errorData.message);
+          } else {
+            throw new Error('Invalid book data. Please check all required fields.');
+          }
+        } else if (response.status === 500) {
+          throw new Error('Server error occurred. Please try again later.');
+        } else {
+          throw new Error(errorData.message || `Failed to create book (Error ${response.status})`);
+        }
       }
 
       const data = await response.json();
@@ -318,8 +412,26 @@ export default function AddBookPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save draft');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Draft save failed:', response.status, errorData);
+        
+        // Handle specific error cases for draft saving
+        if (response.status === 401) {
+          throw new Error('You need to log in to save drafts. Please refresh and try again.');
+        } else if (response.status === 403) {
+          throw new Error('Only sellers can save book drafts. Please check your account role.');
+        } else if (response.status === 400) {
+          if (errorData.errors && Array.isArray(errorData.errors)) {
+            const errorMessages = errorData.errors.map(err => err.msg || err.message).join(', ');
+            throw new Error(`Validation errors: ${errorMessages}`);
+          } else {
+            throw new Error(errorData.message || 'Invalid draft data. Please check your form.');
+          }
+        } else if (response.status === 500) {
+          throw new Error('Server error while saving draft. Please try again later.');
+        } else {
+          throw new Error(errorData.message || `Failed to save draft (Error ${response.status})`);
+        }
       }
 
       toast.success('Book saved as draft!');
@@ -356,6 +468,25 @@ export default function AddBookPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Error Summary */}
+        {Object.keys(errors).length > 0 && (
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+                  <ul className="mt-2 text-sm text-red-700 list-disc list-inside space-y-1">
+                    {Object.entries(errors).map(([field, error]) => (
+                      <li key={field}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Basic Information */}
         <Card>
           <CardHeader>
@@ -552,12 +683,17 @@ export default function AddBookPage() {
                   step="0.01"
                   value={formData.originalPrice || ''}
                   onChange={(e) => handleInputChange('originalPrice', parseFloat(e.target.value) || 0)}
+                  className={errors.originalPrice ? 'border-red-500' : ''}
                   placeholder="0.00"
                   min="0"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  For showing discount percentage
-                </p>
+                {errors.originalPrice ? (
+                  <p className="text-red-500 text-xs mt-1">{errors.originalPrice}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    For showing discount percentage
+                  </p>
+                )}
               </div>
 
               <div>

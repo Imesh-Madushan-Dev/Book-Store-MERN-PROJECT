@@ -183,10 +183,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
 // @desc    Create a new book (Sellers only)
 // @access  Private (Seller)
 router.post('/', [
+  authMiddleware,
   requireSeller,
-  uploadBookImages,
-  handleUploadError,
-  processUploadedFiles,
   body('title').trim().isLength({ min: 1 }).withMessage('Title is required'),
   body('description').trim().isLength({ min: 10 }).withMessage('Description must be at least 10 characters'),
   body('isbn').isISBN().withMessage('Valid ISBN is required'),
@@ -198,7 +196,9 @@ router.post('/', [
   body('format').isIn(['HARDCOVER', 'PAPERBACK', 'EBOOK', 'AUDIOBOOK']).withMessage('Invalid format'),
   body('language').optional().isLength({ min: 1 }).withMessage('Language is required'),
   body('pages').optional().isInt({ min: 1 }).withMessage('Pages must be a positive integer'),
-  body('publishedYear').isInt({ min: 1000, max: new Date().getFullYear() }).withMessage('Valid published year required')
+  body('publishedYear').isInt({ min: 1000, max: new Date().getFullYear() }).withMessage('Valid published year required'),
+  body('images').isArray({ min: 1 }).withMessage('At least one image is required'),
+  body('thumbnail').isURL().withMessage('Thumbnail URL is required')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -217,33 +217,16 @@ router.post('/', [
     if (!publisher) return res.status(400).json({ message: 'Publisher not found' });
     if (!category) return res.status(400).json({ message: 'Category not found' });
 
-    // Process uploaded images
-    const images = [];
-    let thumbnail = '';
-
-    if (req.uploadedFiles?.thumbnail?.[0]) {
-      thumbnail = req.uploadedFiles.thumbnail[0].url;
-    }
-
-    if (req.uploadedFiles?.images) {
-      images.push(...req.uploadedFiles.images.map(file => file.url));
-    }
-
-    // If no thumbnail but has images, use first image as thumbnail
-    if (!thumbnail && images.length > 0) {
-      thumbnail = images[0];
-    }
-
-    if (!thumbnail) {
-      return res.status(400).json({ message: 'At least one image is required' });
-    }
+    // Get images and thumbnail from request body (already uploaded separately)
+    const { images, thumbnail } = req.body;
 
     const bookData = {
       ...req.body,
       sellerId: req.user._id,
       images: images.length > 0 ? images : [thumbnail],
       thumbnail,
-      tags: req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()) : []
+      tags: Array.isArray(req.body.tags) ? req.body.tags : 
+            (req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()) : [])
     };
 
     const book = new Book(bookData);
