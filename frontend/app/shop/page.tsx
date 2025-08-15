@@ -14,11 +14,16 @@ import { booksAPI, type Book, type BookFilters, type Category, type Author } fro
 import { categoriesAPI } from '@/lib/api/categories';
 import { authorsAPI } from '@/lib/api/authors';
 
+// This is a client component
 export default function ShopPage() {
-  const searchParams = useSearchParams();
+  // Server component can be empty or contain server-side logic
+  return <ShopClient />;
+}
+
+function ShopClient() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [authorFilter, setAuthorFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [authorFilter, setAuthorFilter] = useState('all');
   const [sortBy, setSortBy] = useState('title');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,7 +31,7 @@ export default function ShopPage() {
   const [minPrice, setMinPrice] = useState<number | undefined>();
   const [maxPrice, setMaxPrice] = useState<number | undefined>();
   const [format, setFormat] = useState('');
-  const [rating, setRating] = useState<number | undefined>();
+  const [rating, setRating] = useState<number | 'all' | undefined>();
   const [featured, setFeatured] = useState(false);
   
   // Data states
@@ -39,13 +44,24 @@ export default function ShopPage() {
 
   // Initialize from URL params
   useEffect(() => {
-    if (searchParams.get('featured') === 'true') {
-      setFeatured(true);
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('featured') === 'true') {
+        setFeatured(true);
+      }
+      if (params.get('category')) {
+        setCategoryFilter(params.get('category') || 'all');
+      } else {
+        setCategoryFilter('all');
+      }
+      if (params.get('author')) {
+        setAuthorFilter(params.get('author') || 'all');
+      } else {
+        setAuthorFilter('all');
+      }
     }
-    if (searchParams.get('category')) {
-      setCategoryFilter(searchParams.get('category') || '');
-    }
-  }, [searchParams]);
+  }, []);
 
   // Fetch initial data
   useEffect(() => {
@@ -79,12 +95,14 @@ export default function ShopPage() {
         };
 
         if (searchQuery.trim()) filters.search = searchQuery.trim();
-        if (categoryFilter) filters.category = categoryFilter;
-        if (authorFilter) filters.author = authorFilter;
+        if (categoryFilter && categoryFilter !== 'all') filters.category = categoryFilter;
+        if (authorFilter && authorFilter !== 'all') filters.author = authorFilter;
         if (minPrice !== undefined) filters.minPrice = minPrice;
         if (maxPrice !== undefined) filters.maxPrice = maxPrice;
-        if (format) filters.format = format;
-        if (rating !== undefined) filters.rating = rating;
+        if (format && format !== 'all') filters.format = format;
+        if (rating !== undefined && rating !== 'all') {
+          filters.rating = rating;
+        }
         if (featured) filters.featured = true;
 
         const response = await booksAPI.getBooks(filters);
@@ -439,8 +457,8 @@ interface FilterSectionProps {
   setMaxPrice: (value: number | undefined) => void;
   format: string;
   setFormat: (value: string) => void;
-  rating: number | undefined;
-  setRating: (value: number | undefined) => void;
+  rating: number | 'all' | undefined;
+  setRating: (value: number | 'all' | undefined) => void;
   setCurrentPage: (page: number) => void;
 }
 
@@ -479,7 +497,7 @@ function FilterSection({
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category._id} value={category._id}>
                 {category.name}
@@ -500,7 +518,7 @@ function FilterSection({
             <SelectValue placeholder="All Authors" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Authors</SelectItem>
+            <SelectItem value="all">All Authors</SelectItem>
             {authors.map((author) => (
               <SelectItem key={author._id} value={author._id}>
                 {author.name}
@@ -548,7 +566,7 @@ function FilterSection({
             <SelectValue placeholder="All Formats" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Formats</SelectItem>
+            <SelectItem value="all">All Formats</SelectItem>
             <SelectItem value="HARDCOVER">Hardcover</SelectItem>
             <SelectItem value="PAPERBACK">Paperback</SelectItem>
             <SelectItem value="EBOOK">eBook</SelectItem>
@@ -570,7 +588,7 @@ function FilterSection({
             <SelectValue placeholder="Any Rating" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Any Rating</SelectItem>
+            <SelectItem value="all">Any Rating</SelectItem>
             <SelectItem value="4">4+ Stars</SelectItem>
             <SelectItem value="3">3+ Stars</SelectItem>
             <SelectItem value="2">2+ Stars</SelectItem>
