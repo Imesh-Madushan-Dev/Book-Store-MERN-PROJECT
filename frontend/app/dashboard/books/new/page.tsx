@@ -155,6 +155,19 @@ export default function AddBookPage() {
       }
 
       const token = localStorage.getItem('auth_token');
+      
+      // Debug logging
+      console.log('Upload attempt:', {
+        token: token ? 'Present' : 'Missing',
+        userRole: user?.role,
+        apiUrl: process.env.NEXT_PUBLIC_API_URL,
+        fileCount: files.length
+      });
+
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload/book`, {
         method: 'POST',
         headers: {
@@ -164,7 +177,9 @@ export default function AddBookPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload images');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Upload failed:', response.status, errorData);
+        throw new Error(errorData.message || `Upload failed with status ${response.status}`);
       }
 
       const data = await response.json();

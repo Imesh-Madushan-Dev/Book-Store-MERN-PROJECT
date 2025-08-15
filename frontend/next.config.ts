@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       "covers.openlibrary.org",
       "openlibrary.org",
       "images.unsplash.com",
+      "res.cloudinary.com",
     ],
   },
 };

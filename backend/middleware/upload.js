@@ -30,6 +30,7 @@ const storage = new CloudinaryStorage({
     
     return {
       folder: folder,
+      upload_preset: 'products',
       public_id: `${Date.now()}-${Math.round(Math.random() * 1E9)}`,
       resource_type: 'auto',
       // Transformation for book covers and thumbnails
@@ -141,20 +142,7 @@ const processUploadedFiles = (req, res, next) => {
   }
   
   if (req.files) {
-    req.uploadedFiles = {};
-    
-    // Handle multiple files with different field names
-    Object.keys(req.files).forEach(fieldName => {
-      const files = req.files[fieldName];
-      req.uploadedFiles[fieldName] = files.map(file => ({
-        url: file.path,
-        publicId: file.filename,
-        size: file.size,
-        format: file.format
-      }));
-    });
-    
-    // Handle array of files with same field name
+    // Handle array of files with same field name (for upload.array())
     if (Array.isArray(req.files)) {
       req.uploadedFiles = req.files.map(file => ({
         url: file.path,
@@ -162,6 +150,18 @@ const processUploadedFiles = (req, res, next) => {
         size: file.size,
         format: file.format
       }));
+    } else {
+      // Handle multiple files with different field names (for upload.fields())
+      req.uploadedFiles = {};
+      Object.keys(req.files).forEach(fieldName => {
+        const files = req.files[fieldName];
+        req.uploadedFiles[fieldName] = files.map(file => ({
+          url: file.path,
+          publicId: file.filename,
+          size: file.size,
+          format: file.format
+        }));
+      });
     }
   }
   

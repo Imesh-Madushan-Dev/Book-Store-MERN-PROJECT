@@ -67,29 +67,25 @@ router.post('/multiple', [
 // @desc    Upload book images (thumbnail + gallery)
 // @access  Private (Seller)
 router.post('/book', [
+  authMiddleware,
   requireSeller,
-  uploadBookImages,
+  uploadMultiple('images', 10),
   handleUploadError,
   processUploadedFiles
 ], async (req, res) => {
   try {
-    if (!req.uploadedFiles || Object.keys(req.uploadedFiles).length === 0) {
+    if (!req.uploadedFiles || req.uploadedFiles.length === 0) {
       return res.status(400).json({ message: 'No files uploaded' });
     }
 
-    const result = {
-      message: 'Book images uploaded successfully'
-    };
+    // Extract URLs from uploaded files to match frontend expectations
+    const urls = req.uploadedFiles.map(file => file.url);
 
-    if (req.uploadedFiles.thumbnail) {
-      result.thumbnail = req.uploadedFiles.thumbnail[0];
-    }
-
-    if (req.uploadedFiles.images) {
-      result.images = req.uploadedFiles.images;
-    }
-
-    res.json(result);
+    res.json({
+      message: 'Book images uploaded successfully',
+      urls: urls,
+      files: req.uploadedFiles
+    });
   } catch (error) {
     console.error('Book upload error:', error);
     res.status(500).json({ message: 'Upload failed' });
